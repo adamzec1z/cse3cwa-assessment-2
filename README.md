@@ -1,36 +1,70 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CSE3CWA Assessment 1 - Phoneme Activity Builder
 
-## Getting Started
+This project is a frontend activity builder created for CSE3CWA Assessment 1.
 
-First, run the development server:
+The application is designed for teachers preparing phoneme-based activities for Speech Pathology students. It allows users to preview and generate Wordle and Word Search activities as standalone HTML files.
+
+## Main Features
+
+- Phoneme-based Wordle activity
+- Phoneme-based Word Search activity
+- Difficulty settings for Wordle
+- Phoneme hover hints
+- Light and dark themes
+- Responsive navigation
+- Keyboard-accessible controls
+- Standalone HTML generation
+
+## Technology
+
+- Next.js
+- React
+- TypeScript
+- Tailwind CSS
+
+## Project Structure
+
+- `app/` contains the main website pages
+- `components/` contains reusable interface components
+- `public/` contains static files such as the how-to-use video
+- Wordle and Word Search logic is separated into reusable builder components
+
+## How to Run the Project
+
+1. Install the project dependencies:
+
+```bash
+npm install
+```
+
+2. Start the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+3. Open the website in a browser:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```text
+http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+If PowerShell blocks the standard npm command on Windows, use:
 
-## Learn More
+```bash
+npm.cmd install
+npm.cmd run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## References
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+React. (n.d.). *Thinking in React*. React.
 
-## Deploy on Vercel
+Vercel. (2026). *Next.js documentation: App Router*. Next.js.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Tailwind Labs. (n.d.). *Responsive design*. Tailwind CSS.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+World Wide Web Consortium. (n.d.). *How to meet WCAG (Web Content Accessibility Guidelines): Quick reference*. Web Accessibility Initiative.
+
+World Wide Web Consortium. (n.d.). *Developing a keyboard interface*. Web Accessibility Initiative.
