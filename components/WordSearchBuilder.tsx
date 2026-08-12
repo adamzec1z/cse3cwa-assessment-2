@@ -20,6 +20,20 @@ export default function WordSearchBuilder() {
     ["/n/", "/d/", "/k/", "/ɒ/", "/f/", "/t/"],
   ];
 
+  const phonemeHints: Record<string, string> = {
+  "/θ/": "TH (as in thin)",
+  "/ɪ/": "I (as in sit)",
+  "/n/": "N (as in thin)",
+  "/p/": "P (as in pen)",
+  "/g/": "G (as in go)",
+  "/æ/": "A (as in cat)",
+  "/k/": "K (as in cat)",
+  "/t/": "T (as in top)",
+  "/ʃ/": "SH (as in ship)",
+  "/ɒ/": "O (as in dog)",
+  "/d/": "D (as in dog)",
+  "/f/": "F (as in fish)",
+  };
   const [selected, setSelected] = useState<string[]>([]);
   const [foundWords, setFoundWords] = useState<string[]>([]);
   const [message, setMessage] = useState("");
@@ -880,7 +894,8 @@ export default function WordSearchBuilder() {
                 onClick={() =>
                   selectPhoneme(symbol)
                 }
-                title={`Phoneme ${symbol}`}
+                title={phonemeHints[symbol]}
+                aria-label={`${symbol} - ${phonemeHints[symbol]}`}
                 className="flex aspect-square items-center justify-center rounded-lg border border-slate-300 bg-white text-sm font-semibold hover:border-green-500 hover:bg-green-50 focus:outline-none focus:ring-2 focus:ring-green-600"
               >
                 {symbol}
@@ -943,7 +958,16 @@ export default function WordSearchBuilder() {
 
         {/* MESSAGE */}
         {message && (
-          <div className="mt-6 rounded-lg bg-green-50 p-4 font-semibold text-green-800">
+          <div
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+            className={
+              message
+                ? "mt-6 rounded-lg bg-green-50 p-4 font-semibold text-green-800"
+                : ""
+            }
+          >
             {message}
           </div>
         )}

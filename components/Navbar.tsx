@@ -112,15 +112,14 @@ export default function Navbar() {
               <Link
                 href="/"
                 onClick={closeMenu}
-                className="rounded-lg px-4 py-3 font-medium hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-600"
-              >
+                className="rounded-lg px-4 py-3 font-medium text-slate-900 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-600"              >
                 Home
               </Link>
 
               <Link
                 href="/wordle"
                 onClick={closeMenu}
-                className="rounded-lg px-4 py-3 font-medium hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                className="rounded-lg px-4 py-3 font-medium text-slate-900 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-600"
               >
                 Wordle
               </Link>
@@ -128,7 +127,7 @@ export default function Navbar() {
               <Link
                 href="/word-search"
                 onClick={closeMenu}
-                className="rounded-lg px-4 py-3 font-medium hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                className="rounded-lg px-4 py-3 font-medium text-slate-900 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-600"
               >
                 Word Search
               </Link>
@@ -136,7 +135,7 @@ export default function Navbar() {
               <Link
                 href="/about"
                 onClick={closeMenu}
-                className="rounded-lg px-4 py-3 font-medium hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                className="rounded-lg px-4 py-3 font-medium text-slate-900 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-600"
               >
                 About
               </Link>
