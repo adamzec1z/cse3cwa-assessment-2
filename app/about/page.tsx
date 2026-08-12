@@ -94,14 +94,14 @@ export default function AboutPage() {
               <span className="font-semibold">
                 Name:
               </span>{" "}
-              Your Name
+              Adam Zec
             </p>
 
             <p>
               <span className="font-semibold">
                 Student Number:
               </span>{" "}
-              Your Student Number
+              21562377
             </p>
 
             <p>

@@ -7,7 +7,7 @@ export default function Footer() {
         </p>
 
         <p className="mt-1">
-          Your Name — Student Number
+          Adam Zec — 21562377
         </p>
       </div>
     </footer>
