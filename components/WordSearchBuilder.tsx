@@ -83,7 +83,28 @@ export default function WordSearchBuilder() {
   }
 
   function generateHtml() {
+
+    const generatedGridButtons = grid
+      .flatMap((row) =>
+        row.map((symbol) => {
+          const hint = phonemeHints[symbol];
+
+          return `
+            <button
+              title="${hint}"
+              aria-label="${symbol} - ${hint}"
+              onclick="selectPhoneme('${symbol}')"
+            >
+              ${symbol}
+            </button>
+          `;
+        })
+      )
+      .join("");
+
     const html = `
+
+  
 <!DOCTYPE html>
 <html lang="en">
 
@@ -367,230 +388,7 @@ export default function WordSearchBuilder() {
 
         <div class="grid">
 
-          <button
-            title="TH (as in thin)"
-            onclick="selectPhoneme('/θ/')"
-          >
-            /θ/
-          </button>
-
-          <button
-            title="I (as in sit)"
-            onclick="selectPhoneme('/ɪ/')"
-          >
-            /ɪ/
-          </button>
-
-          <button
-            title="N (as in thin)"
-            onclick="selectPhoneme('/n/')"
-          >
-            /n/
-          </button>
-
-          <button
-            title="P (as in pen)"
-            onclick="selectPhoneme('/p/')"
-          >
-            /p/
-          </button>
-
-          <button onclick="selectPhoneme('/g/')">
-            /g/
-          </button>
-
-          <button
-            title="A (as in cat)"
-            onclick="selectPhoneme('/æ/')"
-          >
-            /æ/
-          </button>
-
-
-          <button onclick="selectPhoneme('/k/')">
-            /k/
-          </button>
-
-          <button
-            title="A (as in cat)"
-            onclick="selectPhoneme('/æ/')"
-          >
-            /æ/
-          </button>
-
-          <button onclick="selectPhoneme('/t/')">
-            /t/
-          </button>
-
-          <button
-            title="SH (as in ship)"
-            onclick="selectPhoneme('/ʃ/')"
-          >
-            /ʃ/
-          </button>
-
-          <button onclick="selectPhoneme('/ɒ/')">
-            /ɒ/
-          </button>
-
-          <button onclick="selectPhoneme('/n/')">
-            /n/
-          </button>
-
-
-          <button onclick="selectPhoneme('/d/')">
-            /d/
-          </button>
-
-          <button onclick="selectPhoneme('/ɒ/')">
-            /ɒ/
-          </button>
-
-          <button onclick="selectPhoneme('/g/')">
-            /g/
-          </button>
-
-          <button onclick="selectPhoneme('/f/')">
-            /f/
-          </button>
-
-          <button onclick="selectPhoneme('/ɪ/')">
-            /ɪ/
-          </button>
-
-          <button onclick="selectPhoneme('/p/')">
-            /p/
-          </button>
-
-
-          <button onclick="selectPhoneme('/f/')">
-            /f/
-          </button>
-
-          <button onclick="selectPhoneme('/ɪ/')">
-            /ɪ/
-          </button>
-
-          <button
-            title="SH (as in ship)"
-            onclick="selectPhoneme('/ʃ/')"
-          >
-            /ʃ/
-          </button>
-
-          <button onclick="selectPhoneme('/k/')">
-            /k/
-          </button>
-
-          <button onclick="selectPhoneme('/t/')">
-            /t/
-          </button>
-
-          <button onclick="selectPhoneme('/d/')">
-            /d/
-          </button>
-
-
-          <button
-            title="SH (as in ship)"
-            onclick="selectPhoneme('/ʃ/')"
-          >
-            /ʃ/
-          </button>
-
-          <button onclick="selectPhoneme('/ɪ/')">
-            /ɪ/
-          </button>
-
-          <button onclick="selectPhoneme('/p/')">
-            /p/
-          </button>
-
-          <button
-            title="TH (as in thin)"
-            onclick="selectPhoneme('/θ/')"
-          >
-            /θ/
-          </button>
-
-          <button onclick="selectPhoneme('/æ/')">
-            /æ/
-          </button>
-
-          <button onclick="selectPhoneme('/g/')">
-            /g/
-          </button>
-
-
-          <button onclick="selectPhoneme('/n/')">
-            /n/
-          </button>
-
-          <button onclick="selectPhoneme('/d/')">
-            /d/
-          </button>
-
-          <button onclick="selectPhoneme('/k/')">
-            /k/
-          </button>
-
-          <button onclick="selectPhoneme('/ɒ/')">
-            /ɒ/
-          </button>
-
-          <button onclick="selectPhoneme('/f/')">
-            /f/
-          </button>
-
-          <button onclick="selectPhoneme('/t/')">
-            /t/
-          </button>
-
-        </div>
-
-        <h3>Current Selection</h3>
-
-        <div class="selection">
-
-          <div
-            class="selection-box"
-            id="selection0"
-          >
-            ?
-          </div>
-
-          <div
-            class="selection-box"
-            id="selection1"
-          >
-            ?
-          </div>
-
-          <div
-            class="selection-box"
-            id="selection2"
-          >
-            ?
-          </div>
-
-        </div>
-
-        <div class="controls">
-
-          <button onclick="removeLast()">
-            Delete
-          </button>
-
-          <button
-            class="check"
-            onclick="checkWord()"
-          >
-            Check Word
-          </button>
-
-          <button onclick="resetGame()">
-            Reset
-          </button>
+          ${generatedGridButtons}
 
         </div>
 
