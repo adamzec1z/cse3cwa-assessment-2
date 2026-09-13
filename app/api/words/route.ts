@@ -28,25 +28,79 @@ export async function POST(request: Request) {
 
     if (!english || !phonemes || !activityId) {
       return NextResponse.json(
-        { error: "English word, phonemes, and activity ID are required." },
+        {
+          error:
+            "English word, phonemes, and activity ID are required.",
+        },
         { status: 400 }
       );
     }
 
-    const word = await prisma.word.create({
-      data: {
-        english,
-        phonemes,
-        activityId: Number(activityId),
-      },
-    });
+    if (
+      typeof english !== "string" ||
+      typeof phonemes !== "string"
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "English word and phonemes must be text.",
+        },
+        { status: 400 }
+      );
+    }
 
-    return NextResponse.json(word, { status: 201 });
+    const phonemeList =
+      phonemes.split(" ").filter(Boolean);
+
+    if (phonemeList.length < 1) {
+      return NextResponse.json(
+        {
+          error:
+            "At least one phoneme is required.",
+        },
+        { status: 400 }
+      );
+    }
+
+    const activity =
+      await prisma.activity.findUnique({
+        where: {
+          id: Number(activityId),
+        },
+      });
+
+    if (!activity) {
+      return NextResponse.json(
+        {
+          error:
+            "The selected activity does not exist.",
+        },
+        { status: 404 }
+      );
+    }
+
+    const word =
+      await prisma.word.create({
+        data: {
+          english:
+            english.trim().toUpperCase(),
+          phonemes: phonemes.trim(),
+          activityId: Number(activityId),
+        },
+      });
+
+    return NextResponse.json(
+      word,
+      { status: 201 }
+    );
   } catch (error) {
     console.error(error);
 
     return NextResponse.json(
-      { error: "Failed to create word." },
+      {
+        error:
+          "Failed to create word.",
+      },
       { status: 500 }
     );
   }
