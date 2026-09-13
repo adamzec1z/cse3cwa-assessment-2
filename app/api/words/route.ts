@@ -1,0 +1,53 @@
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+
+export async function GET() {
+  try {
+    const words = await prisma.word.findMany({
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return NextResponse.json(words);
+  } catch (error) {
+    console.error(error);
+
+    return NextResponse.json(
+      { error: "Failed to retrieve words." },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+
+    const { english, phonemes, activityId } = body;
+
+    if (!english || !phonemes || !activityId) {
+      return NextResponse.json(
+        { error: "English word, phonemes, and activity ID are required." },
+        { status: 400 }
+      );
+    }
+
+    const word = await prisma.word.create({
+      data: {
+        english,
+        phonemes,
+        activityId: Number(activityId),
+      },
+    });
+
+    return NextResponse.json(word, { status: 201 });
+  } catch (error) {
+    console.error(error);
+
+    return NextResponse.json(
+      { error: "Failed to create word." },
+      { status: 500 }
+    );
+  }
+}

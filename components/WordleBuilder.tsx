@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type Difficulty = "Easy" | "Standard" | "Hard";
 
@@ -9,8 +9,42 @@ type Phoneme = {
   hint: string;
 };
 
+type SavedWord = {
+  id: number;
+  english: string;
+  phonemes: string;
+};
+
+type SavedActivity = {
+  id: number;
+  name: string;
+  activityType: string;
+  difficulty: string;
+  showHints: boolean;
+  words: SavedWord[];
+};
+
 export default function WordleBuilder() {
-  const targetWord = ["/θ/", "/ɪ/", "/n/"];
+  const [targetWord, setTargetWord] = useState<string[]>([]);
+  const [targetEnglish, setTargetEnglish] = useState("");
+
+  const [difficulty, setDifficulty] =
+    useState<Difficulty>("Standard");
+
+  const [showHints, setShowHints] =
+    useState(true);
+
+  const [guess, setGuess] =
+    useState<string[]>([]);
+
+  const [message, setMessage] =
+    useState("");
+
+  const [correct, setCorrect] =
+    useState(false);
+
+  const [loadError, setLoadError] =
+    useState("");
 
   const allPhonemes: Phoneme[] = [
     {
@@ -49,22 +83,98 @@ export default function WordleBuilder() {
       symbol: "/f/",
       hint: "F (as in fish)",
     },
+    {
+      symbol: "/d/",
+      hint: "D (as in dog)",
+    },
+    {
+      symbol: "/ɒ/",
+      hint: "O (as in dog)",
+    },
+    {
+      symbol: "/g/",
+      hint: "G (as in dog)",
+    },
   ];
 
-  const [difficulty, setDifficulty] =
-    useState<Difficulty>("Standard");
+  // Load the saved Wordle activity from the database.
+  useEffect(() => {
+    async function loadWordleActivity() {
+      try {
+        const response =
+          await fetch("/api/activities");
 
-  const [showHints, setShowHints] =
-    useState(true);
+        if (!response.ok) {
+          throw new Error(
+            "Could not load activities"
+          );
+        }
 
-  const [guess, setGuess] =
-    useState<string[]>([]);
+        const activities: SavedActivity[] =
+          await response.json();
 
-  const [message, setMessage] =
-    useState("");
+        const wordleActivity =
+          activities.find(
+            (activity) =>
+              activity.activityType ===
+                "WORDLE" &&
+              activity.words.length > 0
+          );
 
-  const [correct, setCorrect] =
-    useState(false);
+        if (!wordleActivity) {
+          setLoadError(
+            "No saved Wordle activity was found."
+          );
+          return;
+        }
+
+        const word =
+          wordleActivity.words[0];
+
+        setTargetEnglish(
+          word.english
+        );
+
+        setTargetWord(
+          word.phonemes
+            .split(" ")
+            .filter(Boolean)
+        );
+
+        // Convert database values such as
+        // STANDARD into the values used by the dropdown.
+        const savedDifficulty =
+          wordleActivity.difficulty.toUpperCase();
+
+        if (
+          savedDifficulty === "EASY"
+        ) {
+          setDifficulty("Easy");
+        } else if (
+          savedDifficulty === "HARD"
+        ) {
+          setDifficulty("Hard");
+        } else {
+          setDifficulty("Standard");
+        }
+
+        setShowHints(
+          wordleActivity.showHints
+        );
+      } catch (error) {
+        console.error(
+          "Error loading Wordle activity:",
+          error
+        );
+
+        setLoadError(
+          "There was a problem loading the saved Wordle activity."
+        );
+      }
+    }
+
+    loadWordleActivity();
+  }, []);
 
   function getPhonemeCount() {
     if (difficulty === "Easy") {
@@ -78,12 +188,6 @@ export default function WordleBuilder() {
     return 6;
   }
 
-  const availablePhonemes =
-    allPhonemes.slice(
-      0,
-      getPhonemeCount()
-    );
-
   function getDifficultyDescription() {
     if (difficulty === "Easy") {
       return "4 phoneme choices with fewer distractors.";
@@ -96,15 +200,61 @@ export default function WordleBuilder() {
     return "6 phoneme choices with a standard number of distractors.";
   }
 
+  // Make sure the target phonemes are always available.
+  const targetPhonemes: Phoneme[] =
+    targetWord.map((symbol) => {
+      const found =
+        allPhonemes.find(
+          (phoneme) =>
+            phoneme.symbol === symbol
+        );
+
+      return (
+        found || {
+          symbol,
+          hint: "Target phoneme",
+        }
+      );
+    });
+
+  const distractors =
+    allPhonemes.filter(
+      (phoneme) =>
+        !targetWord.includes(
+          phoneme.symbol
+        )
+    );
+
+  const phonemeChoices = [
+    ...targetPhonemes,
+    ...distractors,
+  ];
+
+  const uniquePhonemes =
+    phonemeChoices.filter(
+      (phoneme, index, array) =>
+        array.findIndex(
+          (item) =>
+            item.symbol ===
+            phoneme.symbol
+        ) === index
+    );
+
+  const availablePhonemes =
+    uniquePhonemes.slice(
+      0,
+      Math.max(
+        getPhonemeCount(),
+        targetWord.length
+      )
+    );
+
   function changeDifficulty(
     newDifficulty: Difficulty
   ) {
     setDifficulty(newDifficulty);
-
     setGuess([]);
-
     setMessage("");
-
     setCorrect(false);
   }
 
@@ -112,7 +262,8 @@ export default function WordleBuilder() {
     symbol: string
   ) {
     if (
-      guess.length < 3 &&
+      guess.length <
+        targetWord.length &&
       !correct
     ) {
       setGuess([
@@ -135,24 +286,39 @@ export default function WordleBuilder() {
   }
 
   function submitGuess() {
-    if (guess.length !== 3) {
+    if (
+      targetWord.length === 0
+    ) {
       setMessage(
-        "Choose three phonemes before submitting."
+        "No Wordle activity has been loaded."
+      );
+
+      return;
+    }
+
+    if (
+      guess.length !==
+      targetWord.length
+    ) {
+      setMessage(
+        `Choose ${targetWord.length} phonemes before submitting.`
       );
 
       return;
     }
 
     const isCorrect =
-      guess[0] === targetWord[0] &&
-      guess[1] === targetWord[1] &&
-      guess[2] === targetWord[2];
+      guess.every(
+        (phoneme, index) =>
+          phoneme ===
+          targetWord[index]
+      );
 
     if (isCorrect) {
       setCorrect(true);
 
       setMessage(
-        "Correct! The English word is THIN."
+        `Correct! The English word is ${targetEnglish}.`
       );
     } else {
       setMessage(
@@ -165,13 +331,21 @@ export default function WordleBuilder() {
 
   function resetGame() {
     setGuess([]);
-
     setMessage("");
-
     setCorrect(false);
   }
 
   function generateHtml() {
+    if (
+      targetWord.length === 0
+    ) {
+      setMessage(
+        "There is no saved word to generate."
+      );
+
+      return;
+    }
+
     const difficultyDescription =
       getDifficultyDescription();
 
@@ -194,6 +368,29 @@ export default function WordleBuilder() {
         })
         .join("");
 
+    const generatedBoxes =
+      targetWord
+        .map(
+          (_, index) => `
+            <div
+              class="box"
+              id="box${index}"
+            >
+              ?
+            </div>
+          `
+        )
+        .join("");
+
+    // These values come from the database.
+    const generatedTargetWord =
+      JSON.stringify(targetWord);
+
+    const generatedEnglish =
+      JSON.stringify(
+        targetEnglish
+      );
+
     const html = `
 <!DOCTYPE html>
 
@@ -208,9 +405,7 @@ export default function WordleBuilder() {
     content="width=device-width, initial-scale=1.0"
   >
 
-  <title>
-    Phoneme Wordle
-  </title>
+  <title>Phoneme Wordle</title>
 
   <style>
 
@@ -228,20 +423,18 @@ export default function WordleBuilder() {
         sans-serif;
 
       background: #f8fafc;
-
       color: #0f172a;
     }
 
     .container {
       width: 90%;
-
       max-width: 700px;
-
       margin: 50px auto;
 
       background: white;
 
-      border: 1px solid #e2e8f0;
+      border:
+        1px solid #e2e8f0;
 
       border-radius: 16px;
 
@@ -258,7 +451,6 @@ export default function WordleBuilder() {
 
     .intro {
       color: #475569;
-
       line-height: 1.6;
     }
 
@@ -287,10 +479,8 @@ export default function WordleBuilder() {
     }
 
     .boxes {
-      display: grid;
-
-      grid-template-columns:
-        repeat(3, minmax(70px, 90px));
+      display: flex;
+      flex-wrap: wrap;
 
       gap: 12px;
 
@@ -298,16 +488,17 @@ export default function WordleBuilder() {
     }
 
     .box {
-      aspect-ratio: 1;
+      width: 90px;
+      height: 90px;
 
-      border: 2px solid #cbd5e1;
+      border:
+        2px solid #cbd5e1;
 
       border-radius: 10px;
 
       display: flex;
 
       align-items: center;
-
       justify-content: center;
 
       background: #f8fafc;
@@ -327,7 +518,6 @@ export default function WordleBuilder() {
 
     .phonemes {
       display: flex;
-
       flex-wrap: wrap;
 
       gap: 10px;
@@ -340,7 +530,8 @@ export default function WordleBuilder() {
 
       border-radius: 8px;
 
-      border: 1px solid #cbd5e1;
+      border:
+        1px solid #cbd5e1;
 
       background: white;
 
@@ -360,14 +551,14 @@ export default function WordleBuilder() {
     }
 
     button:focus {
-      outline: 3px solid #2563eb;
+      outline:
+        3px solid #2563eb;
 
       outline-offset: 2px;
     }
 
     .controls {
       display: flex;
-
       flex-wrap: wrap;
 
       gap: 10px;
@@ -441,13 +632,12 @@ export default function WordleBuilder() {
 
       .container {
         width: 95%;
-
         padding: 20px;
       }
 
-      .boxes {
-        grid-template-columns:
-          repeat(3, 1fr);
+      .box {
+        width: 70px;
+        height: 70px;
       }
 
       button {
@@ -470,8 +660,9 @@ export default function WordleBuilder() {
     </h1>
 
     <p class="intro">
-      Select three phonemes to
-      identify the target word.
+      Select the phonemes in the
+      correct order to identify
+      the target word.
     </p>
 
     <div class="difficulty">
@@ -484,28 +675,7 @@ export default function WordleBuilder() {
     </p>
 
     <div class="boxes">
-
-      <div
-        class="box"
-        id="box0"
-      >
-        ?
-      </div>
-
-      <div
-        class="box"
-        id="box1"
-      >
-        ?
-      </div>
-
-      <div
-        class="box"
-        id="box2"
-      >
-        ?
-      </div>
-
+      ${generatedBoxes}
     </div>
 
     <h2>
@@ -513,9 +683,7 @@ export default function WordleBuilder() {
     </h2>
 
     <div class="phonemes">
-
       ${generatedButtons}
-
     </div>
 
     <div class="controls">
@@ -554,11 +722,11 @@ export default function WordleBuilder() {
 
   <script>
 
-    const targetWord = [
-      "/θ/",
-      "/ɪ/",
-      "/n/"
-    ];
+    const targetWord =
+      ${generatedTargetWord};
+
+    const targetEnglish =
+      ${generatedEnglish};
 
     let guess = [];
 
@@ -569,7 +737,8 @@ export default function WordleBuilder() {
     ) {
 
       if (
-        guess.length < 3 &&
+        guess.length <
+          targetWord.length &&
         !completed
       ) {
 
@@ -597,7 +766,7 @@ export default function WordleBuilder() {
 
       for (
         let i = 0;
-        i < 3;
+        i < targetWord.length;
         i++
       ) {
 
@@ -635,25 +804,33 @@ export default function WordleBuilder() {
         );
 
       if (
-        guess.length !== 3
+        guess.length !==
+        targetWord.length
       ) {
 
         message.className =
           "message";
 
         message.textContent =
-          "Choose three phonemes before submitting.";
+          "Choose " +
+          targetWord.length +
+          " phonemes before submitting.";
 
         return;
       }
 
       const correct =
-        guess[0] ===
-          targetWord[0] &&
-        guess[1] ===
-          targetWord[1] &&
-        guess[2] ===
-          targetWord[2];
+        guess.every(
+          function (
+            phoneme,
+            index
+          ) {
+            return (
+              phoneme ===
+              targetWord[index]
+            );
+          }
+        );
 
       if (correct) {
 
@@ -663,7 +840,9 @@ export default function WordleBuilder() {
           "message success";
 
         message.textContent =
-          "Correct! The English word is THIN.";
+          "Correct! The English word is " +
+          targetEnglish +
+          ".";
 
         answer.className =
           "answer";
@@ -673,12 +852,12 @@ export default function WordleBuilder() {
           'English equivalent' +
           '</div>' +
           '<div class="answer-word">' +
-          'THIN' +
+          targetEnglish +
           '</div>';
 
         for (
           let i = 0;
-          i < 3;
+          i < targetWord.length;
           i++
         ) {
 
@@ -727,7 +906,7 @@ export default function WordleBuilder() {
 
       for (
         let i = 0;
-        i < 3;
+        i < targetWord.length;
         i++
       ) {
 
@@ -799,6 +978,12 @@ export default function WordleBuilder() {
           Configure the Wordle activity and preview the result.
         </p>
 
+        {loadError && (
+          <div className="mt-5 rounded-lg bg-red-50 p-4 text-red-700">
+            {loadError}
+          </div>
+        )}
+
         {/* Target word */}
         <div className="mt-8">
 
@@ -806,7 +991,7 @@ export default function WordleBuilder() {
             Target phoneme word
           </p>
 
-          <div className="mt-3 flex gap-3">
+          <div className="mt-3 flex flex-wrap gap-3">
 
             {targetWord.map(
               (
@@ -839,9 +1024,7 @@ export default function WordleBuilder() {
           <select
             id="difficulty"
             value={difficulty}
-            onChange={(
-              event
-            ) =>
+            onChange={(event) =>
               changeDifficulty(
                 event.target
                   .value as Difficulty
@@ -849,6 +1032,7 @@ export default function WordleBuilder() {
             }
             className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-4 py-3"
           >
+
             <option value="Easy">
               Easy
             </option>
@@ -869,7 +1053,7 @@ export default function WordleBuilder() {
 
         </div>
 
-        {/* Hint setting */}
+        {/* Hints */}
         <div className="mt-8">
 
           <label className="flex items-center gap-3">
@@ -877,12 +1061,9 @@ export default function WordleBuilder() {
             <input
               type="checkbox"
               checked={showHints}
-              onChange={(
-                event
-              ) =>
+              onChange={(event) =>
                 setShowHints(
-                  event.target
-                    .checked
+                  event.target.checked
                 )
               }
               className="h-5 w-5"
@@ -926,7 +1107,7 @@ export default function WordleBuilder() {
         </div>
 
         <p className="mt-5 text-slate-600">
-          Select three phonemes to identify the target word.
+          Select the phonemes in the correct order to identify the target word.
         </p>
 
         <p className="mt-2 text-sm text-slate-500">
@@ -934,20 +1115,19 @@ export default function WordleBuilder() {
         </p>
 
         {/* Guess boxes */}
-        <div className="mt-8 grid max-w-xs grid-cols-3 gap-3">
+        <div className="mt-8 flex max-w-md flex-wrap gap-3">
 
-          {[0, 1, 2].map(
-            (index) => (
+          {targetWord.map(
+            (_, index) => (
               <div
                 key={index}
-                className={`flex aspect-square items-center justify-center rounded-lg border-2 text-xl font-bold ${
+                className={`flex h-24 w-24 items-center justify-center rounded-lg border-2 text-xl font-bold ${
                   correct
                     ? "border-green-500 bg-green-100 text-green-800"
                     : "border-slate-300 bg-slate-50"
                 }`}
               >
-                {guess[index] ||
-                  "?"}
+                {guess[index] || "?"}
               </div>
             )
           )}
@@ -966,9 +1146,7 @@ export default function WordleBuilder() {
             {availablePhonemes.map(
               (phoneme) => (
                 <button
-                  key={
-                    phoneme.symbol
-                  }
+                  key={phoneme.symbol}
                   type="button"
                   onClick={() =>
                     addPhoneme(
@@ -1048,7 +1226,7 @@ export default function WordleBuilder() {
             </p>
 
             <p className="mt-1 text-3xl font-bold text-green-700">
-              THIN
+              {targetEnglish}
             </p>
 
           </div>
@@ -1060,13 +1238,16 @@ export default function WordleBuilder() {
           <button
             type="button"
             onClick={generateHtml}
-            className="rounded-lg bg-slate-900 px-6 py-3 font-semibold text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-700 focus:ring-offset-2"
+            disabled={
+              targetWord.length === 0
+            }
+            className="rounded-lg bg-slate-900 px-6 py-3 font-semibold text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-slate-700 focus:ring-offset-2"
           >
             Generate HTML
           </button>
 
           <p className="mt-2 text-sm text-slate-500">
-            Downloads the current settings as a standalone playable HTML file.
+            Downloads the current database word and settings as a standalone playable HTML file.
           </p>
 
         </div>
